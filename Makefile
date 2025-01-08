@@ -123,7 +123,7 @@ docker-buildx: ## Build and push docker image for the manager for cross-platform
 	- $(CONTAINER_TOOL) buildx create --name my-first-k8s-operator-builder
 	$(CONTAINER_TOOL) buildx use my-first-k8s-operator-builder
 	- $(CONTAINER_TOOL) buildx build --push --platform=$(PLATFORMS) --tag ${IMG} -f Dockerfile.cross .
-	- $(CONTAINER_TOOL) buildx rm my-first-k8s-operator-builder
+	#- $(CONTAINER_TOOL) buildx rm my-first-k8s-operator-builder
 	rm Dockerfile.cross
 
 .PHONY: build-installer

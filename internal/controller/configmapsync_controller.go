@@ -23,6 +23,10 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/api/errors"
 
 	appsv1 "github.com/xirehat/my-first-k8s-operator/api/v1"
 )
@@ -47,10 +51,10 @@ type ConfigMapSyncReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.19.1/pkg/reconcile
 func (r *ConfigMapSyncReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
+    l := log.FromContext(ctx)
 
-    ctx := context.Background()
-    log := r.Log.WithValues("configmapsync", req.NamespacedName)
+    //ctx := context.Background()
+    //log := r.Log.WithValues("configmapsync", req.NamespacedName)
 // Fetch the ConfigMapSync instance
     configMapSync := &appsv1.ConfigMapSync{}
     if err := r.Get(ctx, req.NamespacedName, configMapSync); err != nil {
@@ -73,7 +77,7 @@ func (r *ConfigMapSyncReconciler) Reconcile(ctx context.Context, req ctrl.Reques
     }
     if err := r.Get(ctx, destinationConfigMapName, destinationConfigMap); err != nil {
         if errors.IsNotFound(err) {
-            log.Info("Creating ConfigMap in destination namespace", "Namespace", configMapSync.Spec.DestinationNamespace)
+            l.Info("Creating ConfigMap in destination namespace", "Namespace", configMapSync.Spec.DestinationNamespace)
             destinationConfigMap = &corev1.ConfigMap{
                 ObjectMeta: metav1.ObjectMeta{
                     Name:      configMapSync.Spec.ConfigMapName,
@@ -88,7 +92,7 @@ func (r *ConfigMapSyncReconciler) Reconcile(ctx context.Context, req ctrl.Reques
             return ctrl.Result{}, err
         }
     } else {
-        log.Info("Updating ConfigMap in destination namespace", "Namespace", configMapSync.Spec.DestinationNamespace)
+        l.Info("Updating ConfigMap in destination namespace", "Namespace", configMapSync.Spec.DestinationNamespace)
         destinationConfigMap.Data = sourceConfigMap.Data // Update data from source to destination
         if err := r.Update(ctx, destinationConfigMap); err != nil {
             return ctrl.Result{}, err
@@ -101,8 +105,9 @@ func (r *ConfigMapSyncReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *ConfigMapSyncReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewControllerManagedBy(mgr).
-		For(&appsv1.ConfigMapSync{}).
-		Named("configmapsync").
-		Complete(r)
+       return ctrl.NewControllerManagedBy(mgr).
+               For(&appsv1.ConfigMapSync{}).
+               Named("configmapsync").
+               Complete(r)
+
 }
